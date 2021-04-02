@@ -3,9 +3,16 @@ name = "XqA"
 version = "0.0.1"
 authors = ["Tom Streller <tom@streller.me>"]
 description = "A virtual OS for a machine that never existed"
+edition = "2018"
+publish = false
 
 [dependencies]
-sdl2 = "0.34"
+anyhow = "1.0"
+env_logger = "0.8"
+fontdue = "0.4"
+log = "0.4"
+pixels = "0.2"
+winit = "0.24"
+winit_input_helper = "0.9"
 
 [features]
-default = ["sdl2/ttf"]
