@@ -1,15 +1,20 @@
 mod font;
 mod pixels;
+mod video_memory;
 
 use anyhow::Result;
+
+use self::video_memory::VideoMemory;
 
 pub use self::pixels::PixelsDisplayAdapter;
 
 pub const DISPLAY_COLUMNS: usize = 90;
 pub const DISPLAY_LINES: usize = 25;
 
-const DISPLAY_LOGICAL_WIDTH: usize = 1280;
-const DISPLAY_LOGICAL_HEIGHT: usize = 720;
+#[derive(Debug, Default, Copy, Clone)]
+pub struct Display {
+    pub memory: VideoMemory,
+}
 
 pub trait DisplayAdapter {
     fn run(settings: WindowSettings) -> Result<()>;
