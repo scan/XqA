@@ -1,0 +1,11 @@
+[package]
+name = "XqA"
+version = "0.0.1"
+authors = ["Tom Streller <tom@streller.me>"]
+description = "A virtual OS for a machine that never existed"
+
+[dependencies]
+sdl2 = "0.34"
+
+[features]
+default = ["sdl2/ttf"]
