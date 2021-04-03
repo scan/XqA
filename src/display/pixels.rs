@@ -62,8 +62,6 @@ impl DisplayAdapter for PixelsDisplayAdapter {
             }
 
             if input.update(&event) {
-                log::info!("Event: {:?}", event);
-
                 if let Some(size) = input.window_resized() {
                     pixels.resize(size.width, size.height);
                 }
@@ -81,7 +79,7 @@ impl DisplayAdapter for PixelsDisplayAdapter {
 
 #[inline]
 fn pos_to_pix(column: usize, row: usize) -> (usize, usize) {
-    (row * CELL_HEIGHT + ROW_OFFSET, column * CELL_WIDTH + COLUMN_OFFSET)
+    ((row * CELL_HEIGHT) + ROW_OFFSET, (column * CELL_WIDTH) + COLUMN_OFFSET)
 }
 
 #[inline]
@@ -90,24 +88,31 @@ fn pix_to_mem(x: usize, y: usize) -> usize {
 }
 
 fn draw_display(display: &Display, frame: &mut [u8]) {
+    for (n, pixel) in frame.chunks_exact_mut(4).enumerate() {
+        let (x, y) = (n % DISPLAY_LOGICAL_WIDTH, n / DISPLAY_LOGICAL_WIDTH);
+
+        
+    }
+
+    /*
     for row in 0..DISPLAY_LINES {
         for column in 0..DISPLAY_COLUMNS {
             let (start_x, start_y) = pos_to_pix(column, row);
             let (end_x, end_y) = (start_x + CELL_WIDTH, start_y + CELL_HEIGHT);
             let col: [u8; 4] = display.memory.get(column, row).unwrap().background.into();
 
-            for y in start_y..end_y {
-                for x in start_x..end_x {
-                    let mem_pos = pix_to_mem(x, y) * 4;
+            for y in start_y..end_y - 1 {
+                for x in start_x..end_x - 1 {
+                    //log::info!("column: {}, row: {}, x: {}, y: {}", column, row, x, y);
 
-                    if mem_pos < frame.len() - 4 {
-                        frame[mem_pos] = col[0];
-                        frame[mem_pos + 1] = col[1];
-                        frame[mem_pos + 2] = col[2];
-                        frame[mem_pos + 3] = col[3];
+                    if y < 720 && x < 1280 {
+                        let mem_pos = pix_to_mem(x, y);
+
+                        colours[mem_pos] = col;
                     }
                 }
             }
         }
     }
+    */
 }
