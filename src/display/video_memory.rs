@@ -117,8 +117,19 @@ impl Default for VideoMemory {
 }
 
 impl VideoMemory {
-    pub fn set(&mut self, column: usize, row: usize, content: char, foreground: Colour, background: Colour) -> Result<()> {
-        ensure!(column < DISPLAY_COLUMNS, "column {} exceeds allowed columns", column);
+    pub fn set(
+        &mut self,
+        column: usize,
+        row: usize,
+        content: char,
+        foreground: Colour,
+        background: Colour,
+    ) -> Result<()> {
+        ensure!(
+            column < DISPLAY_COLUMNS,
+            "column {} exceeds allowed columns",
+            column
+        );
         ensure!(row < DISPLAY_LINES, "row {} exceeds allowed rows", row);
 
         let position = (row * DISPLAY_COLUMNS) + column;
@@ -132,7 +143,11 @@ impl VideoMemory {
     }
 
     pub fn get(&self, column: usize, row: usize) -> Result<VideoCell> {
-        ensure!(column < DISPLAY_COLUMNS, "column {} exceeds allowed columns", column);
+        ensure!(
+            column < DISPLAY_COLUMNS,
+            "column {} exceeds allowed columns",
+            column
+        );
         ensure!(row < DISPLAY_LINES, "row {} exceeds allowed rows", row);
 
         let position = (row * DISPLAY_COLUMNS) + column;
