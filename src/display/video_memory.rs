@@ -1,7 +1,7 @@
 use super::{DISPLAY_COLUMNS, DISPLAY_LINES};
 use anyhow::{ensure, Result};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Colour {
     Black,      // #000000
     White,      // #FFFFFF
@@ -44,30 +44,53 @@ impl From<Colour> for [u8; 4] {
     }
 }
 
-impl From<Colour> for u32 {
+impl From<Colour> for &[u8] {
     fn from(c: Colour) -> Self {
         match c {
-            Colour::Black => 0x000000ff,
-            Colour::White => 0xffffffff,
-            Colour::Red => 0x880000ff,
-            Colour::Cyan => 0xaaffeeff,
-            Colour::Violet => 0xcc44ccff,
-            Colour::Green => 0x00cc55ff,
-            Colour::Blue => 0x0000aaff,
-            Colour::Yellow => 0xeeee77ff,
-            Colour::Orange => 0xdd8855ff,
-            Colour::Brown => 0x664400ff,
-            Colour::LightRed => 0xff7777ff,
-            Colour::DarkGrey => 0x333333ff,
-            Colour::Grey => 0x777777ff,
-            Colour::LightGreen => 0xaaff66ff,
-            Colour::LightBlue => 0x0088ffff,
-            Colour::LightGrey => 0xbbbbbbff,
+            Colour::Black => &[0x00, 0x00, 0x00, 0xff],
+            Colour::White => &[0xff, 0xff, 0xff, 0xff],
+            Colour::Red => &[0x88, 0x00, 0x00, 0xff],
+            Colour::Cyan => &[0xaa, 0xff, 0xee, 0xff],
+            Colour::Violet => &[0xcc, 0x44, 0xcc, 0xff],
+            Colour::Green => &[0x00, 0xcc, 0x55, 0xff],
+            Colour::Blue => &[0x00, 0x00, 0xaa, 0xff],
+            Colour::Yellow => &[0xee, 0xee, 0x77, 0xff],
+            Colour::Orange => &[0xdd, 0x88, 0x55, 0xff],
+            Colour::Brown => &[0x66, 0x44, 0x00, 0xff],
+            Colour::LightRed => &[0xff, 0x77, 0x77, 0xff],
+            Colour::DarkGrey => &[0x33, 0x33, 0x33, 0xff],
+            Colour::Grey => &[0x77, 0x77, 0x77, 0xff],
+            Colour::LightGreen => &[0xaa, 0xff, 0x66, 0xff],
+            Colour::LightBlue => &[0x00, 0x88, 0xff, 0xff],
+            Colour::LightGrey => &[0xbb, 0xbb, 0xbb, 0xff],
         }
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+impl From<Colour> for u32 {
+    fn from(c: Colour) -> Self {
+        match c {
+            Colour::Black => 0xff000000,
+            Colour::White => 0xffffffff,
+            Colour::Red => 0xff880000,
+            Colour::Cyan => 0xffaaffee,
+            Colour::Violet => 0xffcc44cc,
+            Colour::Green => 0xff00cc55,
+            Colour::Blue => 0xff0000aa,
+            Colour::Yellow => 0xffeeee77,
+            Colour::Orange => 0xffdd8855,
+            Colour::Brown => 0xff664400,
+            Colour::LightRed => 0xffff7777,
+            Colour::DarkGrey => 0xff333333,
+            Colour::Grey => 0xff777777,
+            Colour::LightGreen => 0xffaaff66,
+            Colour::LightBlue => 0xff0088ff,
+            Colour::LightGrey => 0xffbbbbbb,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VideoCell {
     pub content: char,
     pub background: Colour,

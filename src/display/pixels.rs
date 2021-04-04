@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use super::{Display, DisplayAdapter, WindowSettings, DISPLAY_COLUMNS, DISPLAY_LINES};
+use super::{
+    video_memory::{Colour, VideoCell},
+    Display, DisplayAdapter, WindowSettings, DISPLAY_COLUMNS, DISPLAY_LINES,
+};
 use anyhow::Result;
 use pixels::{Pixels, SurfaceTexture};
 use winit::{
@@ -79,66 +82,67 @@ impl DisplayAdapter for PixelsDisplayAdapter {
     }
 }
 
-#[inline]
-fn pos_to_pix(column: usize, row: usize) -> (usize, usize) {
-    ((row * CELL_HEIGHT) + ROW_OFFSET, (column * CELL_WIDTH) + COLUMN_OFFSET)
-}
-
-#[inline]
-fn pix_to_mem(x: usize, y: usize) -> usize {
-    (y * DISPLAY_LOGICAL_WIDTH) + x
-}
-
 fn draw_display(display: &Display, frame: &mut [u8]) {
-    let mut backbuffer = HashMap::<(usize, usize), [u8; 4]>::new();
-
     for row in 0..DISPLAY_LINES {
         for column in 0..DISPLAY_COLUMNS {
-            let cell = display.memory.0[(row * DISPLAY_COLUMNS) + column];
-
-            for x in 0..CELL_WIDTH {
-                for y in 0..CELL_HEIGHT {
-                    backbuffer.insert((column * CELL_WIDTH + x, row * CELL_HEIGHT + y), cell.background.into());
-                }
+            if let Ok(cell) = display.memory.get(column, row) {
+                blit(
+                    frame,
+                    &(column * CELL_WIDTH + COLUMN_OFFSET, row * CELL_WIDTH + ROW_OFFSET),
+                    &cell,
+                );
             }
         }
     }
+}
 
-    for (n, pixel) in frame.chunks_exact_mut(4).enumerate() {
-        let (x, y) = (n % DISPLAY_LOGICAL_WIDTH, n / DISPLAY_LOGICAL_WIDTH);
+trait Drawable {
+    fn width(&self) -> usize;
+    fn height(&self) -> usize;
+    fn pixels(&self) -> Vec<u8>;
+}
 
-        if let Some(colour) = backbuffer.get(&(x, y)) {
-            pixel[0] = colour[0];
-            pixel[1] = colour[1];
-            pixel[2] = colour[2];
-            pixel[3] = colour[3];
-        } else {
-            pixel[0] = 0x00;
-            pixel[1] = 0x00;
-            pixel[2] = 0x00;
-            pixel[3] = 0xff;
-        }
+impl Drawable for VideoCell {
+    fn width(&self) -> usize {
+        CELL_WIDTH
     }
 
-    /*
-    for row in 0..DISPLAY_LINES {
-        for column in 0..DISPLAY_COLUMNS {
-            let (start_x, start_y) = pos_to_pix(column, row);
-            let (end_x, end_y) = (start_x + CELL_WIDTH, start_y + CELL_HEIGHT);
-            let col: [u8; 4] = display.memory.get(column, row).unwrap().background.into();
+    fn height(&self) -> usize {
+        CELL_HEIGHT
+    }
 
-            for y in start_y..end_y - 1 {
-                for x in start_x..end_x - 1 {
-                    //log::info!("column: {}, row: {}, x: {}, y: {}", column, row, x, y);
+    fn pixels(&self) -> Vec<u8> {
+        vec![self.background; CELL_WIDTH * CELL_HEIGHT]
+            .iter()
+            .flat_map(|s| -> &[u8] { (*s).into() })
+            .map(|b| *b)
+            .collect()
+    }
+}
 
-                    if y < 720 && x < 1280 {
-                        let mem_pos = pix_to_mem(x, y);
+fn blit<S>(screen: &mut [u8], dest: &(usize, usize), sprite: &S)
+where
+    S: Drawable,
+{
+    let (dest_x, dest_y) = *dest;
+    assert!(dest_x + sprite.width() <= DISPLAY_LOGICAL_WIDTH);
+    assert!(dest_y + sprite.height() <= DISPLAY_LOGICAL_HEIGHT);
 
-                        colours[mem_pos] = col;
-                    }
-                }
+    let pixels = sprite.pixels();
+    let width = sprite.width() * 4;
+
+    let mut s = 0;
+    for y in 0..sprite.height() {
+        let i = dest_x * 4 + dest_y * DISPLAY_LOGICAL_WIDTH * 4 + y * DISPLAY_LOGICAL_HEIGHT * 4;
+
+        // Merge pixels from sprite into screen
+        let zipped = screen[i..i + width].iter_mut().zip(&pixels[s..s + width]);
+        for (left, &right) in zipped {
+            if right > 0 {
+                *left = right;
             }
         }
+
+        s += width;
     }
-    */
 }
