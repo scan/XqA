@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "editorconfig.editorconfig",
-        "matklad.rust-analyzer"
+        "matklad.rust-analyzer",
+        "wayou.vscode-todo-highlight"
     ]
 }

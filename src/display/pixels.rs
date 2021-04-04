@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::{Display, DisplayAdapter, WindowSettings, DISPLAY_COLUMNS, DISPLAY_LINES};
 use anyhow::Result;
 use pixels::{Pixels, SurfaceTexture};
@@ -88,10 +90,34 @@ fn pix_to_mem(x: usize, y: usize) -> usize {
 }
 
 fn draw_display(display: &Display, frame: &mut [u8]) {
+    let mut backbuffer = HashMap::<(usize, usize), [u8; 4]>::new();
+
+    for row in 0..DISPLAY_LINES {
+        for column in 0..DISPLAY_COLUMNS {
+            let cell = display.memory.0[(row * DISPLAY_COLUMNS) + column];
+
+            for x in 0..CELL_WIDTH {
+                for y in 0..CELL_HEIGHT {
+                    backbuffer.insert((column * CELL_WIDTH + x, row * CELL_HEIGHT + y), cell.background.into());
+                }
+            }
+        }
+    }
+
     for (n, pixel) in frame.chunks_exact_mut(4).enumerate() {
         let (x, y) = (n % DISPLAY_LOGICAL_WIDTH, n / DISPLAY_LOGICAL_WIDTH);
 
-        
+        if let Some(colour) = backbuffer.get(&(x, y)) {
+            pixel[0] = colour[0];
+            pixel[1] = colour[1];
+            pixel[2] = colour[2];
+            pixel[3] = colour[3];
+        } else {
+            pixel[0] = 0x00;
+            pixel[1] = 0x00;
+            pixel[2] = 0x00;
+            pixel[3] = 0xff;
+        }
     }
 
     /*
