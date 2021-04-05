@@ -9,7 +9,12 @@ use super::{
 };
 use anyhow::{Error, Result};
 use fontdue::{Font, FontSettings};
-use sdl2::{event::Event, pixels::Color, rect::{Point, Rect}, render::{BlendMode, Texture}};
+use sdl2::{
+    event::Event,
+    pixels::Color,
+    rect::{Point, Rect},
+    render::{BlendMode, Texture},
+};
 
 const DISPLAY_LOGICAL_WIDTH: usize = 1280;
 const DISPLAY_LOGICAL_HEIGHT: usize = 720;
@@ -88,17 +93,30 @@ impl DisplayAdapter for SDL2DisplayAdapter {
                                     texture_canvas
                                         .set_draw_color(entry.key().background);
                                     texture_canvas.clear();
-                                    texture_canvas.set_blend_mode(BlendMode::Blend);
+                                    texture_canvas
+                                        .set_blend_mode(BlendMode::Blend);
 
-                                    let (metrics, bitmap) =
-                                        font.rasterize('g', 17.0);
+                                    let (metrics, bitmap) = font
+                                        .rasterize(entry.key().content, 16.0);
 
                                     log::info!("Size: {:?}", metrics);
+                                    let ofx = ((CELL_WIDTH / 2)
+                                        - (metrics.width / 2))
+                                        as i32
+                                        + metrics.xmin;
+                                    let ofy = ((CELL_HEIGHT / 2)
+                                        - (metrics.height / 2))
+                                        as i32
+                                        - metrics.ymin;
 
                                     for fy in 0..metrics.height {
                                         for fx in 0..metrics.width {
                                             let fc =
                                                 bitmap[fy * metrics.width + fx];
+                                            if fc == 0 {
+                                                continue;
+                                            }
+
                                             let colour: &[u8] =
                                                 entry.key().foreground.into();
                                             texture_canvas.set_draw_color((
@@ -107,7 +125,8 @@ impl DisplayAdapter for SDL2DisplayAdapter {
                                             ));
                                             texture_canvas.draw_point(
                                                 Point::new(
-                                                    fx as i32, fy as i32,
+                                                    (fx) as i32 + ofx,
+                                                    (fy) as i32 + ofy,
                                                 ),
                                             );
                                         }

@@ -1,5 +1,6 @@
 use super::{DISPLAY_COLUMNS, DISPLAY_LINES};
 use anyhow::{ensure, Result};
+use rand::Rng;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Colour {
@@ -108,7 +109,7 @@ pub struct VideoCell {
 impl Default for VideoCell {
     fn default() -> Self {
         Self {
-            content: 'g',
+            content: ' ',
             background: Colour::Blue,
             foreground: Colour::White,
         }
@@ -120,7 +121,14 @@ pub struct VideoMemory(pub [VideoCell; DISPLAY_COLUMNS * DISPLAY_LINES]);
 
 impl Default for VideoMemory {
     fn default() -> Self {
-        VideoMemory([VideoCell::default(); DISPLAY_COLUMNS * DISPLAY_LINES])
+        let mut tmp = VideoMemory([VideoCell::default(); DISPLAY_COLUMNS * DISPLAY_LINES]);
+        let mut rnd = rand::thread_rng();
+
+        for c in tmp.0.iter_mut() {
+            c.content = rnd.gen_range('A'..'z');
+        }
+
+        tmp
     }
 }
 
