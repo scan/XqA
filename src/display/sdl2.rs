@@ -1,11 +1,15 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    rc::Rc,
+};
 
 use super::{
-    video_memory::VideoCell, Display, DisplayAdapter, WindowSettings,
-    DISPLAY_COLUMNS, DISPLAY_LINES,
+    font::NOTO_MONO, video_memory::VideoCell, Display, DisplayAdapter,
+    WindowSettings, DISPLAY_COLUMNS, DISPLAY_LINES,
 };
 use anyhow::{Error, Result};
-use sdl2::{event::Event, rect::Rect, render::Texture};
+use fontdue::{Font, FontSettings};
+use sdl2::{event::Event, pixels::Color, rect::{Point, Rect}, render::{BlendMode, Texture}};
 
 const DISPLAY_LOGICAL_WIDTH: usize = 1280;
 const DISPLAY_LOGICAL_HEIGHT: usize = 720;
@@ -29,19 +33,23 @@ impl DisplayAdapter for SDL2DisplayAdapter {
                 settings.width as u32,
                 settings.height as u32,
             )
+            .resizable()
             .position_centered()
             .build()?;
+
+        let font = Font::from_bytes(NOTO_MONO, FontSettings::default())
+            .map_err(|e| Error::msg(e))?;
 
         let mut canvas = window.into_canvas().present_vsync().build()?;
         canvas.set_logical_size(
             DISPLAY_LOGICAL_WIDTH as u32,
             DISPLAY_LOGICAL_HEIGHT as u32,
-        );
+        )?;
 
         canvas.clear();
         canvas.present();
 
-        let mut texture_creator = canvas.texture_creator();
+        let texture_creator = canvas.texture_creator();
 
         let mut display = Display::default();
 
@@ -51,6 +59,7 @@ impl DisplayAdapter for SDL2DisplayAdapter {
             sdl_context.event_pump().map_err(|e| Error::msg(e))?;
 
         'running: loop {
+            canvas.set_draw_color(Color::BLACK);
             canvas.clear();
 
             for event in event_pump.poll_iter() {
@@ -63,9 +72,9 @@ impl DisplayAdapter for SDL2DisplayAdapter {
             for row in 0..DISPLAY_LINES {
                 for column in 0..DISPLAY_COLUMNS {
                     let cell = display.memory.get(column, row)?;
-                    let texture = match cell_cache.get(&cell) {
-                        Some(texture) => texture,
-                        None => {
+                    let texture = match cell_cache.entry(cell) {
+                        Entry::Occupied(entry) => Rc::clone(entry.get()),
+                        Entry::Vacant(entry) => {
                             let mut texture = texture_creator
                                 .create_texture_target(
                                     None,
@@ -77,29 +86,56 @@ impl DisplayAdapter for SDL2DisplayAdapter {
                                 &mut texture,
                                 |texture_canvas| {
                                     texture_canvas
-                                        .set_draw_color(cell.background);
+                                        .set_draw_color(entry.key().background);
                                     texture_canvas.clear();
+                                    texture_canvas.set_blend_mode(BlendMode::Blend);
+
+                                    let (metrics, bitmap) =
+                                        font.rasterize('g', 17.0);
+
+                                    log::info!("Size: {:?}", metrics);
+
+                                    for fy in 0..metrics.height {
+                                        for fx in 0..metrics.width {
+                                            let fc =
+                                                bitmap[fy * metrics.width + fx];
+                                            let colour: &[u8] =
+                                                entry.key().foreground.into();
+                                            texture_canvas.set_draw_color((
+                                                colour[0], colour[1],
+                                                colour[2], fc,
+                                            ));
+                                            texture_canvas.draw_point(
+                                                Point::new(
+                                                    fx as i32, fy as i32,
+                                                ),
+                                            );
+                                        }
+                                    }
                                 },
+                            )?;
+
+                            log::info!(
+                                "Created texture for cell {:?}",
+                                entry.key()
                             );
 
-                            let tex_ref = Rc::new(texture);
-
-                            cell_cache.insert(cell, tex_ref);
-
-                            &tex_ref.clone()
+                            Rc::clone(entry.insert(Rc::new(texture)))
                         }
                     };
 
-                    canvas.copy(
-                        texture,
-                        None,
-                        Some(Rect::new(
-                            (column * CELL_WIDTH) as i32,
-                            (row * CELL_HEIGHT) as i32,
-                            CELL_WIDTH as u32,
-                            CELL_HEIGHT as u32,
-                        )),
-                    );
+                    canvas
+                        .copy(
+                            &texture,
+                            None,
+                            Some(Rect::new(
+                                (column * CELL_WIDTH + COLUMN_OFFSET) as i32,
+                                (row * CELL_HEIGHT + ROW_OFFSET) as i32,
+                                CELL_WIDTH as u32,
+                                CELL_HEIGHT as u32,
+                            )),
+                        )
+                        .map_err(|e| Error::msg(e))?;
                 }
             }
 

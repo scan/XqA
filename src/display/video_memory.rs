@@ -108,7 +108,7 @@ pub struct VideoCell {
 impl Default for VideoCell {
     fn default() -> Self {
         Self {
-            content: ' ',
+            content: 'g',
             background: Colour::Blue,
             foreground: Colour::White,
         }
