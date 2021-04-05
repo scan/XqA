@@ -90,6 +90,14 @@ impl From<Colour> for u32 {
     }
 }
 
+impl From<Colour> for sdl2::pixels::Color {
+    fn from(c: Colour) -> Self {
+        let tmp: &[u8] = c.into();
+
+        Self::RGBA(tmp[0], tmp[1], tmp[2], tmp[3])
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VideoCell {
     pub content: char,

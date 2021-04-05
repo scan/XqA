@@ -1,12 +1,11 @@
 mod font;
-mod pixels;
+mod sdl2;
 mod video_memory;
 
 use anyhow::Result;
 
+pub use self::sdl2::SDL2DisplayAdapter;
 use self::video_memory::VideoMemory;
-
-pub use self::pixels::PixelsDisplayAdapter;
 
 pub const DISPLAY_COLUMNS: usize = 90;
 pub const DISPLAY_LINES: usize = 25;

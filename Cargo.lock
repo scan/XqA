@@ -11,6 +11,7 @@ dependencies = [
  "fontdue",
  "log",
  "pixels",
+ "sdl2",
  "winit",
  "winit_input_helper",
 ]
@@ -1257,6 +1258,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
+name = "sdl2"
+version = "0.34.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "505d7a6ef5f96289a6ec50fc8b65ec75f5571f0aa94fa6ea230f6b228fa05d57"
+dependencies = [
+ "bitflags",
+ "lazy_static",
+ "libc",
+ "sdl2-sys",
+]
+
+[[package]]
+name = "sdl2-sys"
+version = "0.34.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cb164f53dbcad111de976bbf1f3083d3fcdeda88da9cfa281c70822720ee3da"
+dependencies = [
+ "cfg-if 0.1.10",
+ "libc",
+ "version-compare",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.125"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1436,6 +1460,12 @@ name = "unicode-xid"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7fe0bb3479651439c9112f72b6c505038574c9fbb575ed1bf3b797fa39dd564"
+
+[[package]]
+name = "version-compare"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d63556a25bae6ea31b52e640d7c41d1ab27faba4ccb600013837a3d0b3994ca1"
 
 [[package]]
 name = "version_check"

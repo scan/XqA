@@ -3,10 +3,10 @@
 
 mod display;
 
-use display::{start, PixelsDisplayAdapter, WindowSettings};
+use display::{start, SDL2DisplayAdapter, WindowSettings};
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();
 
-    start::<PixelsDisplayAdapter>(WindowSettings::default())
+    start::<SDL2DisplayAdapter>(WindowSettings::default())
 }
